@@ -1618,8 +1618,6 @@ cc_library {
         symbol_file: "libc.map.txt",
         versions: ["10000"],
     },
-
-    symbol_ordering_file: "symbol_ordering",
 }
 
 genrule {
