@@ -366,12 +366,27 @@ static bool InstallHooks(libc_globals* globals, const char* options, const char*
   return true;
 }
 
+#if defined(USE_SCUDO)
+#else
+extern "C" void je_set_zero_filling(bool val);
+#endif
+
 // Initializes memory allocation framework once per process.
 static void MallocInitImpl(libc_globals* globals) {
   char prop[PROP_VALUE_MAX];
   char* options = prop;
 
   MaybeInitGwpAsanFromLibc(globals);
+
+#if defined(USE_SCUDO)
+#else
+  // Check if the process wants zero-filling
+  char* env = getenv("JE_MALLOC_ZERO_FILLING");
+  if (env && strcmp(env, "1") == 0) {
+    async_safe_format_log(ANDROID_LOG_WARN, "libc", "Enabling jemalloc zero-filling");
+    je_set_zero_filling(true);
+  }
+#endif
 
   // Prefer malloc debug since it existed first and is a more complete
   // malloc interceptor than the hooks.
